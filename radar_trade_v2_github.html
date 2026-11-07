@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0c1113"><meta name="apple-mobile-web-app-capable" content="yes">
+<title>Radar Trade V2</title>
+<style>
+:root{--bg:#0c1113;--card:#141d21;--line:#29383e;--fg:#e8eff1;--muted:#94a4aa;--gold:#d7b45d;--green:#46c493;--red:#f07870;--orange:#e8ad52}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px system-ui,-apple-system,"Segoe UI",sans-serif;padding:14px 14px 90px}
+main{max-width:720px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;padding:8px 2px 16px;border-bottom:1px solid var(--line);margin-bottom:14px}
+h1{font-size:20px;margin:0}.muted{color:var(--muted);font-size:12px}.pill{border:1px solid var(--line);border-radius:30px;padding:5px 10px;font-size:11px}
+.notice{background:#302613;border:1px solid #76531b;color:#f0c779;border-radius:12px;padding:12px;margin-bottom:12px;font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:14px;margin:12px 0}
+h2{font-size:15px;margin:0 0 12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric{background:#0e171a;border-radius:10px;padding:11px}.metric small{display:block;color:var(--muted);font-size:11px}.metric b{font-size:20px;direction:ltr;display:block}
+button{border:1px solid var(--line);background:#202e33;color:var(--fg);padding:10px 13px;border-radius:10px;font:inherit;cursor:pointer}button.primary{background:var(--gold);color:#211a09;border:0;font-weight:700}
+input,select{width:100%;background:#0e171a;border:1px solid var(--line);border-radius:9px;padding:10px;color:var(--fg);font:inherit;margin:5px 0 10px}
+label{font-size:12px;color:var(--muted)}.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}
+nav{position:fixed;bottom:0;left:0;right:0;background:#10191d;border-top:1px solid var(--line);display:flex;justify-content:center;gap:5px;padding:9px 5px calc(9px + env(safe-area-inset-bottom))}
+nav button{flex:1;max-width:140px;padding:9px 3px;font-size:12px}.tab{display:none}.tab.active{display:block}
+table{width:100%;border-collapse:collapse;font-size:12px}td,th{text-align:right;padding:9px 5px;border-bottom:1px solid var(--line)}th{color:var(--muted)}
+.green{color:var(--green)}.red{color:var(--red)}.gold{color:var(--gold)}.item{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);gap:10px}
+small{color:var(--muted)}.empty{color:var(--muted);text-align:center;padding:20px}
+</style></head>
+<body><main>
+<header class="top"><div><h1>RADAR TRADE <span class="gold">V2</span></h1><div class="muted">LBank Perpetual · GitHub Pages edition</div></div><span class="pill" id="conn">آفلاین / بدون اتصال</span></header>
+<div class="notice"><b>نسخه تک‌فایلی GitHub Pages:</b> تلاش برای دریافت داده عمومی از LBank Perpetual مستقیماً از مرورگر انجام می‌شود. اگر LBank درخواست مرورگر را به‌دلیل CORS مسدود کند، اتصال مستقیم در GitHub Pages ممکن نیست و به یک واسط سرور نیاز خواهد بود. سیگنال‌دهی تا تأیید کندل‌های تاریخی و بک‌تست خاموش است.</div>
+<section id="dashboard" class="tab active">
+<div class="grid">
+<div class="metric"><small>سرمایه مبنا (قابل ویرایش)</small><b id="equityView">$350</b></div>
+<div class="metric"><small>ریسک هر معامله</small><b id="riskView">0.5%</b></div>
+<div class="metric"><small>بودجه ریسک</small><b id="budgetView">$1.75</b></div>
+<div class="metric"><small>معاملات ثبت‌شده</small><b id="tradeCount">0</b></div>
+</div>
+<div class="card"><h2>وضعیت سیستم</h2><div class="item"><span>اتصال LBank Perpetual</span><b id="marketStatus" class="red">بررسی نشده</b></div><div class="item"><span>قراردادهای دریافتی</span><b id="contractCount">—</b></div><div class="item"><span>آخرین به‌روزرسانی</span><b id="lastUpdate">—</b></div><div class="item"><span>صدور سیگنال</span><b class="gold">خاموش</b></div><p id="marketNote" class="muted">برای دریافت داده عمومی بازار، دکمه اتصال را بزن.</p><button class="primary" onclick="refreshMarket()">اتصال / به‌روزرسانی بازار</button></div><div class="card"><h2>بازار زنده پرپچوال</h2><div id="liveTickers" class="empty">هنوز داده‌ای دریافت نشده است.</div></div>
+<div class="card"><h2>محاسبه‌گر حجم معامله</h2><div class="grid"><div><label>موجودی حساب (USDT)</label><input id="equity" type="number" value="350" min="0"></div><div><label>ریسک (%)</label><input id="risk" type="number" value="0.5" min="0.1" max="1" step="0.1"></div><div><label>قیمت ورود</label><input id="entry" type="number" placeholder="مثلاً 0.55" step="any"></div><div><label>حد ضرر</label><input id="stop" type="number" placeholder="مثلاً 0.54" step="any"></div></div><button class="primary" onclick="calc()">محاسبه حجم</button><div id="calcResult" class="muted" style="margin-top:12px">قیمت ورود و حد ضرر را وارد کن.</div></div>
+</section>
+<section id="watch" class="tab"><div class="card"><h2>واچ‌لیست ۲۰ قرارداد</h2><p class="muted">فهرست اولیه قابل ویرایش است؛ قیمت و تغییرات از بازار قراردادهای پرپچوال خوانده می‌شود.</p><div id="watchlist"></div><div class="row"><input id="newSymbol" placeholder="نماد مثل XRPUSDT"><button onclick="addSymbol()">افزودن</button></div></div></section>
+<section id="journal" class="tab"><div class="card"><h2>ثبت معامله دستی</h2><label>نماد</label><input id="jSymbol" placeholder="XRPUSDT"><div class="row"><div><label>جهت</label><select id="jSide"><option>LONG</option><option>SHORT</option></select></div><div><label>نتیجه خالص (USDT)</label><input id="jPnl" type="number" step="any" placeholder="مثلاً 2.5"></div></div><label>یادداشت</label><input id="jNote" placeholder="دلیل ورود / خروج"><button class="primary" onclick="addTrade()">ذخیره معامله</button></div><div class="card"><h2>تاریخچه</h2><div id="trades"></div></div></section>
+<section id="settings" class="tab"><div class="card"><h2>تنظیمات</h2><p class="muted">حالت اجرا: دستی · صرافی هدف: LBank · تعداد واچ‌لیست: حداکثر ۲۰</p><label>گروه قرارداد</label><input id="productGroup" value="SwapU" placeholder="SwapU"><button onclick="saveProductGroup()">ذخیره گروه قرارداد</button><p id="backendMsg" class="muted">در صورت خطای CORS، GitHub Pages به‌تنهایی قادر به رفع آن نیست.</p><hr style="border-color:var(--line)"><button onclick="exportData()">خروجی پشتیبان JSON</button> <button onclick="clearData()">پاک کردن داده‌های محلی</button></div></section>
+</main><nav><button onclick="tab('dashboard')">داشبورد</button><button onclick="tab('watch')">واچ‌لیست</button><button onclick="tab('journal')">ژورنال</button><button onclick="tab('settings')">تنظیمات</button></nav>
+<script>
+const defaults=['BTCUSDT','ETHUSDT','XRPUSDT','SOLUSDT','BNBUSDT','DOGEUSDT','ADAUSDT','TRXUSDT','AVAXUSDT','LINKUSDT','DOTUSDT','LTCUSDT','BCHUSDT','ETCUSDT','XLMUSDT','ATOMUSDT','NEARUSDT','APTUSDT','OPUSDT','ARB​​USDT'.replaceAll('\u200b','')];
+let state=JSON.parse(localStorage.getItem('rtv2')||'{}');state.watch=state.watch||defaults;state.trades=state.trades||[];
+function persist(){localStorage.setItem('rtv2',JSON.stringify(state));render()}
+function tab(id){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function calc(){let e=+document.getElementById('equity').value,r=+document.getElementById('risk').value,en=+document.getElementById('entry').value,sl=+document.getElementById('stop').value;let out=document.getElementById('calcResult');if(!(e>0&&r>0&&r<=1&&en>0&&sl>0&&en!==sl)){out.textContent='ورودی نامعتبر است. ریسک باید بین ۰ تا ۱ درصد باشد.';return}let budget=e*r/100,dist=Math.abs(en-sl),qty=budget/dist;out.innerHTML=`بودجه ریسک: <b class="gold">$${budget.toFixed(2)}</b><br>حجم تقریبی: <b>${qty.toPrecision(6)} واحد</b><br><small>این محاسبه هنوز کارمزد، Funding، اسلیپیج و ضریب قرارداد را لحاظ نمی‌کند؛ قبل از معامله با مشخصات قرارداد تطبیق بده.</small>`}
+
+let liveMap = {};
+const LBANK_BASE='https://lbkperp.lbank.com/cfd/openApi/v1/pub/';
+let productGroup=localStorage.getItem('rtv2_productGroup')||'SwapU';
+document.getElementById('productGroup').value=productGroup;
+function saveProductGroup(){productGroup=document.getElementById('productGroup').value.trim()||'SwapU';localStorage.setItem('rtv2_productGroup',productGroup);document.getElementById('backendMsg').textContent='گروه قرارداد ذخیره شد: '+productGroup;}
+async function lbankPublic(path,params={}){
+ const u=new URL(LBANK_BASE+path);
+ Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
+ const res=await fetch(u.toString(),{method:'GET',cache:'no-store'});
+ if(!res.ok)throw new Error('HTTP '+res.status);
+ return await res.json();
+}
+function unpack(payload){
+ let d=payload?.data??payload?.result??payload;
+ if(d&& !Array.isArray(d) && Array.isArray(d.list))d=d.list;
+ return d;
+}
+async function refreshMarket(){
+ const status=document.getElementById('marketStatus');status.textContent='در حال اتصال…';status.className='gold';
+ document.getElementById('marketNote').textContent='در حال درخواست داده عمومی از LBank Perpetual…';
+ try{
+  const [timePayload, tickerPayload, contractPayload]=await Promise.all([
+   lbankPublic('getTime'),
+   lbankPublic('marketData',{productGroup}),
+   lbankPublic('instrument',{productGroup})
+  ]);
+  const tickers=unpack(tickerPayload),contracts=unpack(contractPayload);
+  if(!Array.isArray(tickers))throw new Error('ساختار پاسخ marketData با انتظار برنامه سازگار نیست');
+  liveMap={};
+  tickers.forEach(x=>{const s=String(x.symbol||'').toUpperCase().replace(/[^A-Z0-9]/g,'');liveMap[s]=x;});
+  status.textContent='داده دریافت شد';status.className='green';
+  document.getElementById('contractCount').textContent=Array.isArray(contracts)?contracts.length:'نامشخص';
+  document.getElementById('lastUpdate').textContent=new Date().toLocaleTimeString('fa-IR');
+  document.getElementById('conn').textContent='LBank · داده دریافت شد';
+  document.getElementById('marketNote').textContent='پاسخ API عمومی دریافت شد. دریافت داده به معنی تأیید صحت استراتژی یا فعال بودن سیگنال نیست.';
+  document.getElementById('liveTickers').innerHTML=tickers.slice().sort((a,b)=>Number(b.turnover||b.volume||0)-Number(a.turnover||a.volume||0)).slice(0,25).map(x=>{
+   const last=Number(x.lastPrice??x.last??x.close??0), mark=Number(x.markedPrice??x.markPrice??0), open=Number(x.openPrice??x.open??0);
+   const change=open?((last-open)/open*100):NaN;
+   return `<div class="item"><b>${x.symbol||'—'}</b><span><b>${last?last.toLocaleString('en-US',{maximumFractionDigits:8}):'—'}</b><small>${mark?' · Mark '+mark.toLocaleString('en-US',{maximumFractionDigits:8}):''}</small></span><span class="${change>=0?'green':'red'}">${Number.isFinite(change)?change.toFixed(2)+'%':'—'}</span></div>`;
+  }).join('')||'<div class="empty">در پاسخ بازار داده‌ای وجود ندارد.</div>';
+  render();
+ }catch(e){
+  status.textContent='اتصال ناموفق';status.className='red';
+  document.getElementById('conn').textContent='بدون اتصال';
+  document.getElementById('marketNote').textContent='خطا: '+e.message+'. اگر پیام Failed to fetch یا CORS دیدی، محدودیت مرورگر است؛ برای اتصال پایدار باید API از طریق Backend واسط فراخوانی شود.';
+ }
+}
+function render(){let e=+(document.getElementById('equity')?.value||350),r=+(document.getElementById('risk')?.value||.5);document.getElementById('equityView').textContent='$'+e.toFixed(0);document.getElementById('riskView').textContent=r+'%';document.getElementById('budgetView').textContent='$'+(e*r/100).toFixed(2);document.getElementById('tradeCount').textContent=state.trades.length;
+document.getElementById('watchlist').innerHTML=state.watch.map((s,i)=>{let x=liveMap[s];return `<div class="item"><span>${i+1}. <b>${s}</b></span><span>${x?`<b>${Number(x.lastPrice||0).toLocaleString('en-US',{maximumFractionDigits:8})}</b> <small class="${Number(x.lastPrice)>=Number(x.openPrice)?'green':'red'}">${x.openPrice?(((Number(x.lastPrice)-Number(x.openPrice))/Number(x.openPrice))*100).toFixed(2)+'%':''}</small>`:'<small>در قراردادهای دریافتی پیدا نشد</small>'} <button onclick="removeSymbol(${i})">حذف</button></span></div>`}).join('');
+document.getElementById('trades').innerHTML=state.trades.length?state.trades.slice().reverse().map(t=>`<div class="item"><span><b>${t.symbol}</b> · ${t.side}<br><small>${t.date} · ${t.note||''}</small></span><b class="${t.pnl>=0?'green':'red'}">${t.pnl.toFixed(2)} USDT</b></div>`).join(''):'<div class="empty">هنوز معامله‌ای ثبت نشده است.</div>'}
+function addSymbol(){let s=document.getElementById('newSymbol').value.toUpperCase().replace(/[^A-Z0-9]/g,'');if(s&&state.watch.length<20&&!state.watch.includes(s)){state.watch.push(s);document.getElementById('newSymbol').value='';persist()}}
+function removeSymbol(i){state.watch.splice(i,1);persist()}
+function addTrade(){let symbol=document.getElementById('jSymbol').value.toUpperCase().trim(),pnl=+document.getElementById('jPnl').value;if(!symbol||!Number.isFinite(pnl)){alert('نماد و نتیجه خالص را وارد کن');return}state.trades.push({symbol,side:document.getElementById('jSide').value,pnl,note:document.getElementById('jNote').value,date:new Date().toLocaleString('fa-IR')});document.getElementById('jSymbol').value='';document.getElementById('jPnl').value='';document.getElementById('jNote').value='';persist()}
+function exportData(){let a=document.createElement('a'),b=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});a.href=URL.createObjectURL(b);a.download='radar-trade-backup.json';a.click();URL.revokeObjectURL(a.href)}
+function clearData(){if(confirm('تمام ژورنال و تنظیمات محلی پاک شود؟')){localStorage.removeItem('rtv2');state={watch:defaults,trades:[]};persist()}}
+document.getElementById('equity').addEventListener('input',render);document.getElementById('risk').addEventListener('input',render);
+render();
+</script></body></html>
